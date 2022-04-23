@@ -1,40 +1,57 @@
 <template>
 
+  <div class="top-menu">
+    <button @click="reset" class="btn-primary">Reset board</button>
+    <div>
+    <label for="genders">Filter by gender</label>
+    <select @change="genderFilter" v-model="selected">
+      <option v-for="option in options" :value="option.value">
+        {{ option.text }}
+      </option>
+    </select>
+    </div>
+  </div>
 
-<div class="top-menu">
-
-  <label for="genders">Filter by gender</label>
-  <select @change="genderFilter" v-model="selected">
-    <option v-for="option in options" :value="option.value">
-      {{ option.text }}
-    </option>
-  </select>
-</div>
-  <div class="wrapper">
-    <div class="flex" v-for="user in users">
-      <div class="card">
-        <div class="header-card">
-          <img class="img-card" v-bind:src="user.picture.large" />
-        </div>
-
-        <div class="body-card">
-          <h3>{{ user.name.first }} {{ user.name.last }}</h3>
-          {{ user.name.title }} {{ user.name.first }} {{ user.name.last }}
-          <br />
-          {{ user.email }}
-          <br />
-          {{ user.dob.date }}
-          <br />
-          {{ user.location.street.number }} {{ user.location.street.name }}
-          <br />
-          {{ user.phone }}
-          <br />
-          Password : {{ user.login.password }}
-          <br />
+<div class="container"  >
+  
+  <div class="card" v-for="profile in profiles">
+    <div class="card__header">
+      <img v-bind:src="profile.image" alt="card__image" class="card__image" width="600">
+    </div>
+    <div class="card__body">
+      <span class="tag tag-blue">   {{ profile.phone }}</span>
+      <h4> {{profile.nom }}</h4>
+      <p>{{ profile.email }}
+            <br />
+           {{ profile.date }}
+            <br />
+            {{ profile.adresse }}
+            <br /></p>
+    </div>
+    <div class="card__footer">
+      <div class="user">
+        <img v-bind:src="profile.thumbnail" alt="user__image" class="user__image">
+        <div class="user__info">
+          <h5>{{profile.nom }}</h5>
+          <small>
+            Password : {{ profile.password }}
+            <br /></small>
         </div>
       </div>
     </div>
   </div>
+
+</div>
+
+  <div class="down-menu">
+     <button @click="addTenProfiles" class="btn-primary">Voir plus</button>
+  </div>
+
+
+
+
+
+
 </template>
 
 <script>
@@ -43,6 +60,8 @@ export default {
   data() {
     return {
       users: [],
+      profiles: [],
+      dob: [],
       req: "?results=10",
       selected: "All",
       options: [
@@ -56,101 +75,226 @@ export default {
   mounted() {
     axios.get("https://randomuser.me/api/" + this.req).then((response) => {
       this.users = response.data.results;
+      
+      this.getProfile(this.users)
     });
   },
 
   methods: {
-        genderFilter() {
-      this.users = [];
-      this.req = this.selected;
+    genderFilter() {
+      this.profiles = [];
+      this.dob = [];
 
+      this.req = this.selected;
       axios.get("https://randomuser.me/api/" + this.req).then((response) => {
-        this.users = response.data.results;
+        this.users = response.data.results;   
+        this.getProfile(this.users)
+     
       });
+
+
     },
 
- 
+    getProfile(resp){
+
+      this.getDate(resp)
+      for (let i = 0; i < resp.length; i++) {
+        this.profiles.push({
+          thumbnail: resp[i].picture.thumbnail,
+          image: resp[i].picture.large,
+          gender: resp[i].gender,
+          nom : resp[i].name.first + " " +  resp[i].name.last,
+          email :resp[i].email,
+          date: this.dob[i],
+          adresse: resp[i].location.street.number + " " + resp[i].location.street.name,
+          phone: resp[i].phone,
+          password: resp[i].login.password
+        })
+
+      }
+    },
+
+    getDate(resp){
+      for (let i = 0; i < resp.length; i++) {
+        let dob = resp[i].dob.date.split("T")[0];
+        let date = dob.split("-");
+        const mois = [
+          "Janvier",
+          "Février",
+          "Mars",
+          "Avril",
+          "Mai",
+          "Juin",
+          "Juillet",
+          "Août",
+          "Septembre",
+          "Octobre",
+          "Novembre",
+          "Décembre",
+        ];
+        let date_format = date[2] + " " + mois[date[1] - 1] + " " + date[0];
+        this.dob.push(date_format);
+      }
+    },
+
+    reset(){
+      this.profiles = [];
+      this.dob = [];
+
+    },
+
+    addTenProfiles() {
+      axios.get("https://randomuser.me/api/" + this.req).then((response) => {
+        this.users = response.data.results;
+        this.getProfile(this.users)
+      });
+    },
   },
 };
 </script>
 
 <style scoped>
-.wrapper {
-  display: grid;
-  grid-auto-flow: row dense;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  gap: 0px 0px;
-  grid-template-areas: ". .";
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
-* {
-  font-size: 1.2rem;
-  font-weight: 500;
+.btn-primary{
+  background-color: #0f172a;
+  color: white;
+  border: none;
+  padding: 5px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-h1 {
-  font-weight: 500;
-  font-size: 2.6rem;
-  top: -10px;
+.down-menu{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
 }
 
-h3 {
-  font-size: 2rem;
-  color: #38bdf8;
-  font-weight: 500;
-}
-
-.img-card {
-  border-radius: 50%;
-  margin: 0 auto;
-}
-.card {
-  margin-bottom: 1rem;
-  background: #1e293b;
-  color: #bbc5d1;
-  border-radius: 30px;
+select{
   width: 100%;
-  margin: 30px;
+  padding: 5px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.top-menu{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 10px;
 }
 
-.header-card {
-  padding: 20px;
-  text-align: center;
-}
-.title-card {
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-.body-card {
-  padding: 20px;
-  font-weight: 500;
+body {
+  font-family: "Quicksand", sans-serif;
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  background: #7f7fd5;
+  background: linear-gradient(to right, #91eae4, #86a8e7, #7f7fd5);
 }
 
-.flex {
+.container {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: normal;
-  align-content: normal;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1200px;
+  margin-block: 2rem;
+  gap: 2rem;
 }
 
-.top-menu {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: normal;
-    align-content: normal;
-    margin-top: 20px;
+img {
+  max-width: 100%;
+  display: block;
+  object-fit: cover;
 }
 
-label, select {
+.card {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  width: clamp(20rem, calc(20rem + 2vw), 22rem);
+  overflow: hidden;
+  box-shadow: 0 .1rem 1rem rgba(0, 0, 0, 0.1);
+  border-radius: 1em;
+  background: #ECE9E6;
+background: linear-gradient(to right, #FFFFFF, #ECE9E6);
 
-  margin-right: 10px;
 }
 
 
+
+.card__body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+
+.tag {
+  align-self: flex-start;
+  padding: .25em .75em;
+  border-radius: 1em;
+  font-size: .75rem;
+}
+
+.tag + .tag {
+  margin-left: .5em;
+}
+
+.tag-blue {
+  background: #0f172a;
+  color: #fafafa;
+}
+
+.tag-brown {
+  background: #D1913C;
+background: linear-gradient(to bottom, #FFD194, #D1913C);
+  color: #fafafa;
+}
+
+.tag-red {
+  background: #cb2d3e;
+background: linear-gradient(to bottom, #ef473a, #cb2d3e);
+  color: #fafafa;
+}
+
+.card__body h4 {
+  font-size: 1.5rem;
+  text-transform: capitalize;
+}
+
+.card__footer {
+  display: flex;
+  padding: 1rem;
+  margin-top: auto;
+}
+
+.user {
+  display: flex;
+  gap: .5rem;
+}
+
+.user__image {
+  border-radius: 50%;
+}
+
+.user__info > small {
+  color: #666;
+}
 </style>
