@@ -70,9 +70,7 @@ export default {
     },
 
     genderFilter() {
-      this.selected === "Men"
-        ? this.filter(this.selected)
-        : this.filter(this.selected);
+     this.filter(this.selected);
     },
   },
 };
