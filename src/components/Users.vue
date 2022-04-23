@@ -60,18 +60,16 @@ export default {
   },
 
   methods: {
-    filter(payload) {
+        genderFilter() {
       this.users = [];
-      this.req = payload;
+      this.req = this.selected;
 
       axios.get("https://randomuser.me/api/" + this.req).then((response) => {
         this.users = response.data.results;
       });
     },
 
-    genderFilter() {
-     this.filter(this.selected);
-    },
+ 
   },
 };
 </script>
